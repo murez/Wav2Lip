@@ -66,23 +66,32 @@ def get_smoothened_boxes(boxes, T):
 	return boxes
 
 def face_detect(images):
-	detector = face_detection.FaceAlignment(face_detection.LandmarksType._2D, 
+	if args.cartoon:
+		model = insightface.model_zoo.get_model('retinaface_r50_v1')
+		model.prepare(ctx_id = -1, nms=0.4)
+		predictions = []
+		for image in images:
+			bbox, landmark = model.detect(image, threshold=0.3, scale=1.0)
+			bbox = np.array(bbox).astype(np.int)[:,:-1]
+			predictions.append(tuple(bbox[0].tolist()))
+	else:
+		detector = face_detection.FaceAlignment(face_detection.LandmarksType._2D, 
 											flip_input=False, device=device)
 
-	batch_size = args.face_det_batch_size
+		batch_size = args.face_det_batch_size
 	
-	while 1:
-		predictions = []
-		try:
-			for i in tqdm(range(0, len(images), batch_size)):
-				predictions.extend(detector.get_detections_for_batch(np.array(images[i:i + batch_size])))
-		except RuntimeError:
-			if batch_size == 1: 
-				raise RuntimeError('Image too big to run face detection on GPU. Please use the --resize_factor argument')
-			batch_size //= 2
-			print('Recovering from OOM error; New batch size: {}'.format(batch_size))
-			continue
-		break
+		while 1:
+			predictions = []
+			try:
+				for i in tqdm(range(0, len(images), batch_size)):
+					predictions.extend(detector.get_detections_for_batch(np.array(images[i:i + batch_size])))
+			except RuntimeError:
+				if batch_size == 1: 
+					raise RuntimeError('Image too big to run face detection on GPU. Please use the --resize_factor argument')
+				batch_size //= 2
+				print('Recovering from OOM error; New batch size: {}'.format(batch_size))
+				continue
+			break
 
 	results = []
 	pady1, pady2, padx1, padx2 = args.pads
@@ -101,8 +110,9 @@ def face_detect(images):
 	boxes = np.array(results)
 	if not args.nosmooth: boxes = get_smoothened_boxes(boxes, T=5)
 	results = [[image[y1: y2, x1:x2], (y1, y2, x1, x2)] for image, (x1, y1, x2, y2) in zip(images, boxes)]
-
-	del detector
+	
+	if not args.cartoon:
+		del detector
 	return results 
 
 def datagen(frames, mels):
