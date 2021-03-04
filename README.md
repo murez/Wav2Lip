@@ -1,3 +1,7 @@
+[Google Colab notebook for cartoon](https://colab.research.google.com/gist/murez/0e7c419f04afadb2ad2c4637210632d2/wav2lip_quick_trial_for_cartoon.ipynb
+
+-------------------
+
 # **Wav2Lip**: *Accurately Lip-syncing Videos In The Wild*
 
 This code is part of the paper: _A Lip Sync Expert Is All You Need for Speech to Lip Generation In the Wild_ published at ACM Multimedia 2020. 
