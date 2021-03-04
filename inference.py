@@ -51,6 +51,9 @@ parser.add_argument('--rotate', default=False, action='store_true',
 parser.add_argument('--nosmooth', default=False, action='store_true',
 					help='Prevent smoothing face detections over a short temporal window')
 
+parser.add_argument('--cartoon', default=False, action='store_true',
+					help='using cartoon faces.')
+
 args = parser.parse_args()
 args.img_size = 96
 
